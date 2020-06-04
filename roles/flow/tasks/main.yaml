@@ -1,4 +1,16 @@
 ---
+- name: Create flow user
+  user:
+    name: flow
+    system: true
+    create_home: false
+
+- name: Add nginx to flow group
+  user:
+    name: nginx
+    groups: flow
+    append: yes
+
 - name: Install packages
   apt:
     package:
