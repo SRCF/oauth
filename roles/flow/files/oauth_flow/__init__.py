@@ -15,7 +15,7 @@ HOSTNAME = os.environ["FLASK_HOSTNAME"]
 REQUESTS_PATH = "https://%s:444/oauth2/auth/requests/" % HOSTNAME
 JSON_HEADER = { "Content-Type": "application/json" }
 GOOSE_MESSAGE = "SRCF OpenID Connect lets you identify yourself to other applications securely without sharing your credentials. After you login, you will learn more about the application seeking your information and decide how much information to share with them (if any)."
-LOOKUP_PATH = "https://www.lookup.cam.ac.uk/api/v1/person/crsid/"
+LOOKUP_PATH = "https://www.lookup.cam.ac.uk/api/v1/person/crsid/%s?fetch=email,departingEmail"
 
 # lookup is the data returned by lookup if the crsid does not belong to an
 # SRCF user, None otherwise.
@@ -29,6 +29,10 @@ def get_email(crsid: str, lookup: Optional[dict]):
     if lookup is None:
         return crsid + "@srcf.net"
     else:
+        for entry in lookup["attributes"]:
+            if entry["scheme"] == "email" or entry["scheme"] == "departingEmail":
+                return entry["value"]
+
         return crsid + "@cam.ac.uk"
 
 SCOPES = {
@@ -130,7 +134,7 @@ def consent():
         pwd.getpwnam(crsid)
         lookup = None
     except KeyError:
-        lookup = requests.get(LOOKUP_PATH + crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
+        lookup = requests.get(LOOKUP_PATH % crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
 
     if request.method == "GET":
         scopes = []
