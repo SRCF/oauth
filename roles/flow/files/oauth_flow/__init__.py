@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, url_for, session
+from flask import Flask, render_template, redirect, request, url_for
 import os
 import json
 import requests
@@ -100,13 +100,10 @@ def login_check(challenge: str):
 
 @app.route('/consent', methods=["GET", "POST"])
 def consent():
+    challenge = request.args["consent_challenge"]
+    response = get("consent", challenge)
+
     if request.method == "GET":
-        challenge = request.args["consent_challenge"]
-        response = get("consent", challenge)
-
-        session["response"] = response
-        session["challenge"] = challenge
-
         scopes = []
         for scope in response["requested_scope"]:
             if scope not in SCOPES:
@@ -121,12 +118,6 @@ def consent():
 
         return render_template('authorize.html', client=response["client"], scopes=scopes)
     else:
-        response = session["response"]
-        challenge = session["challenge"]
-
-        del session["response"]
-        del session["challenge"]
-
         action = request.form.get('action')
 
         if action == "cancel":
