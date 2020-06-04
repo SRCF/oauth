@@ -1,0 +1,57 @@
+{% extends "base_card.html" %}
+{% set body_classes = "layout-card wide" %}
+
+{% block main %}
+{% if err_msg %}
+  <div class="alert alert-danger">{{ err_msg }}</div>
+{% endif %}
+<div class="row">
+  <div class="col-md-7">
+    <p>The following application wants you to identify yourself:</p>
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">{{ client["client_name"]|safe }}</h4>
+        <h5 class="card-subtitle"><code>{{ client["client_uri"] }}</code></h5>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <p>Please select the information you want to share with {{ client["client_name"] }}.</p>
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group">
+          <div class="form-check">
+            {% for scope in scopes %}
+            <input class="form-check-input" name="scope" type="checkbox" value="{{ scope }}" id="{{ scope }}"></input>
+            <label class="form-check-label" for="{{ scope }}">
+              {{ scope }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<div class="card-footer">
+  <div class="text-right">
+    <button type="submit" name="action" value="authorize" class="btn btn-outline-primary">Authorize</button>
+    <button type="submit" name="action" value="cancel" class="btn btn-outline-secondary">Cancel</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block under %}
+<div class="float-left">
+  <span class="text-muted">{{ client["client_name"] }}</span>
+</div>
+<div class="float-right">
+  <a href="https://www.srcf.net">
+    <span class="text-danger">Student-Run</span>
+    <span class="text-primary">Computing Facility</span>
+  </a>
+</div>
+{% endblock %}

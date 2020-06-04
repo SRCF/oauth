@@ -1,0 +1,35 @@
+---
+- name: Install nginx
+  apt:
+    package:
+      - nginx-full
+      - certbot
+      - python3-certbot-nginx
+
+# TODO: Run certbot
+
+- name: Disable default nginx
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Enable nginx
+  systemd:
+    enabled: true
+    name: nginx
+
+- name: Copy auth nginx config
+  template:
+    src: auth.conf
+    dest: /etc/nginx/sites-available/auth.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable auth nginx config
+  file:
+    src: /etc/nginx/sites-available/auth.conf
+    dest: /etc/nginx/sites-enabled/auth.conf
+    owner: root
+    group: root
+    state: link

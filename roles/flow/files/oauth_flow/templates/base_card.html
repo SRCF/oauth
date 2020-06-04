@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% if body_classes is not defined %}
+  {% set body_classes = "layout-card" %}
+{% endif %}
+
+{% block body %}
+<div class="container">
+  <form method="post">
+    <div class="card mx-auto">
+      <div class="card-body">
+        <img src="https://www.srcf.net/_srcf/images/logo.svg" class="logo">
+        <h5 class="logo-title">{{ self.title() }}</h5>
+        {% block main %}{% endblock %}
+      </div>
+      {% block footer %}{% endblock %}
+    </div>
+  </form>
+  {% block under %}{% endblock %}
+</div>
+{% endblock %}

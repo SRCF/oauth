@@ -1,0 +1,63 @@
+---
+# TODO: setup NIS
+- name: Create hydra user
+  user:
+    name: hydra
+    system: yes
+
+- name: Copy hydra config
+  template:
+    src: hydra.yaml
+    dest: /home/hydra/.hydra.yaml
+    owner: hydra
+    group: nogroup
+    mode: '0600'
+
+- name: Copy hydra binary
+  copy:
+    src: hydra
+    dest: /usr/local/bin/hydra
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install postgres
+  apt:
+    package:
+      - postgresql
+      - python3-psycopg2 # For ansible to modify postgres
+
+- name: Install acl # Makes sudo -u postgres work
+  apt:
+    package:
+      - acl
+
+- name: Create hydra postgres user
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: hydra
+
+- name: Create hydra postgres database
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: hydra
+
+- name: Enable postgres
+  systemd:
+    enabled: true
+    name: postgresql
+
+- name: Copy hydra systemd service
+  copy:
+    src: hydra.service
+    dest: /usr/local/lib/systemd/system/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable hydra
+  systemd:
+    enabled: true
+    name: hydra

@@ -1,0 +1,27 @@
+---
+- ufw:
+    rule: allow
+    direction: in
+    port: "{{ item }}"
+  loop:
+    - ssh
+    - http
+    - https
+
+- ufw:
+    rule: allow
+    direction: out
+    port: "{{ item }}"
+  loop:
+    - https
+
+- ufw:
+    rule: allow
+    interface: eth1
+    direction: "{{ item }}"
+  loop:
+    - in
+    - out
+
+- ufw:
+    state: enabled

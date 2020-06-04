@@ -1,0 +1,22 @@
+log:
+  level: panic
+
+serve:
+  tls:
+    allow_termination_from:
+      - 127.0.0.1/32
+
+dsn: postgres:///hydra
+
+urls:
+  self:
+    issuer: https://{{ server_address }}/
+
+  login: https://{{ server_address }}/login
+  consent: https://{{ server_address }}/consent
+
+secrets:
+  system:
+    - {{ hydra_system_secret }}
+  cookie:
+    - {{ hydra_cookie_secret }}

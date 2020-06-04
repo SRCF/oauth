@@ -1,0 +1,11 @@
+[Unit]
+Description=Hydra
+After=network.target
+
+[Service]
+User=hydra
+Type=simple
+ExecStart=/usr/local/bin/hydra --sqa-opt-out serve all
+
+[Install]
+WantedBy=multi-user.target

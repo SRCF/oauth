@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{% if title %}{{ title }} - {% endif %}{{ config['WLS_TITLE'] }}{% endblock %}</title>
+    {# Stylesheets #}
+    <link rel="stylesheet" href="https://www.srcf.net/_srcf/vendor/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://www.srcf.net/_srcf/srcf-bs.css">
+    {# Logo favicon assets #}
+    <link href="/static/images/favicon.ico" rel="icon" type="image/x-icon" sizes="16x16 24x24">
+    <link href="/static/images/favicon.svg" rel="icon" type="image/svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-touch-icon.png">
+    <link rel="manifest" href="/static/images/site.webmanifest">
+    <link rel="mask-icon" href="/static/images/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="msapplication-config" content="/static/images/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+  </head>
+  <body {% if body_classes %}class="{{ body_classes }}"{% endif %}>
+  {% block body %}
+    <nav class="navbar navbar-light fixed-top">
+      <div class="container">
+        <h1 class="navbar-brand mb-0">
+          {{ config['WLS_BRAND_HTML']|safe }}
+        </h1>
+      </div>
+    </nav>
+    <main role="main" class="container">
+    <h1>Goose login service</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'info' if category == 'message' else category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+    {% block main %}{% endblock %}
+    </main>
+  {% endblock %}
+  </body>
+</html>
