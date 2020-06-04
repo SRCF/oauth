@@ -14,6 +14,17 @@ REQUESTS_PATH = "https://%s:444/oauth2/auth/requests/" % HOSTNAME
 JSON_HEADER = { "Content-Type": "application/json" }
 GOOSE_MESSAGE = "SRCF OpenID Connect lets you identify yourself to other applications securely without sharing your credentials. After you login, you will learn more about the application seeking your information and decide how much information to share with them (if any)."
 
+SCOPES = {
+    "profile": {
+        "description": "Name",
+        "value_getter": lambda x: pwd.getpwnam(x).pw_gecos.rsplit(",",maxsplit=4)[0],
+    },
+    "email": {
+        "description": "Name",
+        "value_getter": lambda x: x + "@srcf.net",
+    }
+}
+
 class WLSRequest(ucam_webauth.Request):
     def __str__(self):
         query_string = ucam_webauth.Request.__str__(self)
@@ -96,7 +107,19 @@ def consent():
         session["response"] = response
         session["challenge"] = challenge
 
-        return render_template('authorize.html', client=response["client"], scopes=response["requested_scope"])
+        scopes = []
+        for scope in response["requested_scope"]:
+            if scope not in SCOPES:
+                continue
+
+            data = SCOPES[scope]
+            scopes.append({
+                "name": scope,
+                "description": data["description"],
+                "value": data["value_getter"](response["subject"])
+            })
+
+        return render_template('authorize.html', client=response["client"], scopes=scopes)
     else:
         response = session["response"]
         challenge = session["challenge"]
@@ -116,23 +139,26 @@ def consent():
         crsid = response["subject"]
         audience = response["requested_access_token_audience"]
 
-        try:
-            name = pwd.getpwnam(crsid).pw_gecos.rsplit(",",maxsplit=4)[0]
-        except KeyError:
-            raise # TODO handle
+        requested_scope = response["requested_scope"]
+        scopes = ["openid"]
+        id_token = {}
+        for scope in request.form.getlist("scope"):
+            if scope not in SCOPES or scopes not in requested_scope:
+                continue
 
-        scopes = request.form.getlist("scope")
-        scopes = [x for x in scopes if x in response["requested_scope"]]
+            scopes.append(scope)
+            id_token[scope] = SCOPES[scope]["value_getter"](crsid)
+
+        if "openid" in requested_scope:
+            scopes.append("openid")
+
         body = {
             "grant_scope": scopes,
             "grant_access_token_audience": audience,
             "remember": True,
             "remember_for": 3600,
             "session": {
-                "id_token": {
-                    "name": name,
-                    "email": crsid + "@srcf.net",
-                }
+                "id_token": id_token
             }
         }
 

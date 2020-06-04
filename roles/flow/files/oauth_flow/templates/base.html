@@ -7,6 +7,7 @@
     {# Stylesheets #}
     <link rel="stylesheet" href="https://www.srcf.net/_srcf/vendor/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://www.srcf.net/_srcf/srcf-bs.css">
+    <link rel="stylesheet" href="/static/oauth.css">
     {# Logo favicon assets #}
     <link href="/static/images/favicon.ico" rel="icon" type="image/x-icon" sizes="16x16 24x24">
     <link href="/static/images/favicon.svg" rel="icon" type="image/svg">
@@ -17,24 +18,16 @@
     <meta name="msapplication-config" content="/static/images/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
   </head>
-  <body {% if body_classes %}class="{{ body_classes }}"{% endif %}>
-  {% block body %}
-    <nav class="navbar navbar-light fixed-top">
-      <div class="container">
-        <h1 class="navbar-brand mb-0">
-          {{ config['WLS_BRAND_HTML']|safe }}
-        </h1>
+  <body class="layout-card">
+    <form method="post" class="auth-container">
+      <div class="card mx-auto">
+        <div class="card-body">
+          <img src="https://www.srcf.net/_srcf/images/logo.svg" class="logo">
+          <h5 class="logo-title">SRCF OAuth2</h5>
+        </div>
+        {% block body %}{% endblock %}
       </div>
-    </nav>
-    <main role="main" class="container">
-    <h1>Goose login service</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{ 'info' if category == 'message' else category }}">{{ message }}</div>
-    {% endfor %}
-    {% endwith %}
-    {% block main %}{% endblock %}
-    </main>
-  {% endblock %}
+    </form>
+
   </body>
 </html>

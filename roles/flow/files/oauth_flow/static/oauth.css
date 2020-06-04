@@ -1,0 +1,20 @@
+.auth-container {
+    max-width: 400px;
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+.client-logo {
+    width: 150px;
+    height: 150px;
+}
+.scope-row {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    display: flex;
+}
+.scope-row label {
+    flex-grow: 1;
+}
