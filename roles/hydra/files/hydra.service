@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=hydra
 Type=simple
-ExecStart=/usr/local/bin/hydra --sqa-opt-out serve all
+ExecStart=/usr/local/bin/hydra serve all --sqa-opt-out
 
 [Install]
 WantedBy=multi-user.target

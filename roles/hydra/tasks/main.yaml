@@ -49,6 +49,11 @@
     enabled: true
     name: postgresql
 
+- name: Migrate sql
+  become: true
+  become_user: hydra
+  command: hydra migrate sql -y postgres:///hydra
+
 - name: Copy hydra systemd service
   copy:
     src: hydra.service
