@@ -49,7 +49,7 @@ def get_email(crsid: str, data: Union[Member, dict]) -> dict:
     if isinstance(data, Member):
         return {
             "email": crsid + "@srcf.net",
-            "email_verified": crsid + "@srcf.net"
+            "email_verified": True,
         }
     else:
         for entry in data["attributes"]:
