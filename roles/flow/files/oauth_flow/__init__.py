@@ -164,17 +164,18 @@ def consent():
         audience = response["requested_access_token_audience"]
 
         requested_scope = response["requested_scope"]
-        scopes = ["openid"]
+        scopes = []
+
+        if "openid" in requested_scope:
+            scopes.append("openid")
+
         id_token = {}
         for scope in request.form.getlist("scope"):
-            if scope not in SCOPES or scopes not in requested_scope:
+            if scope not in SCOPES or scope not in requested_scope:
                 continue
 
             scopes.append(scope)
             id_token[scope] = SCOPES[scope]["value_getter"](crsid, lookup)
-
-        if "openid" in requested_scope:
-            scopes.append("openid")
 
         body = {
             "grant_scope": scopes,
