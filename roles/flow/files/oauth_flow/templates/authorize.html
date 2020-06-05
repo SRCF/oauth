@@ -16,6 +16,9 @@
           <input type="checkbox" name="scope" value="{{ scope }}" id="{{ scope }}" checked>
       </div>
     {% endfor %}
+    <div class="text-center">
+      <span class="text-muted">Note that some applications may not work properly without all permisions granted.</span>
+    </div>
   {% else %}
     <div class="scope-row">
       <p>{{ client["client_name"] }} only needs to know your username (crsid)</p>
