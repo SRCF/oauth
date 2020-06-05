@@ -35,6 +35,14 @@ def get_name(crsid: str, data: Union[Member, dict]) -> dict:
             "preferred_username": crsid,
         }
 
+def get_groups(crsid: str, data: Union[Member, dict]) -> dict:
+    if isinstance(data, Member):
+        return {
+            "groups": [x.name for x in data.societies]
+        }
+    else:
+        return { "groups": [] }
+
 def get_email(crsid: str, data: Union[Member, dict]) -> dict:
     if isinstance(data, Member):
         return {
@@ -58,7 +66,12 @@ SCOPES_DATA = {
         "description": "Email",
         "get_claims": get_email,
         "value_str": lambda x: x["email"],
-    }
+    },
+    "groups": {
+        "description": "SRCF societies membership",
+        "get_claims": get_groups,
+        "value_str": lambda x: ""
+    },
 }
 
 class WLSRequest(ucam_webauth.Request):

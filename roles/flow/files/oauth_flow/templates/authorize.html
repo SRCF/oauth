@@ -11,7 +11,8 @@
     {% for scope in scopes %}
       <div class="scope-row">
           {% set data = SCOPES_DATA[scope] %}
-          <label for="{{ scope }}">{{ data["description"] }} ({{ data["value_str"](id_token) }})</label>
+          {% set value = data["value_str"](id_token) %}
+          <label for="{{ scope }}">{{ data["description"] }}{% if value|length %} ({{ value }}){% endif %}</label>
           <input type="checkbox" name="scope" value="{{ scope }}" id="{{ scope }}" checked>
       </div>
     {% endfor %}

@@ -15,6 +15,17 @@ urls:
   login: https://{{ server_address }}/login
   consent: https://{{ server_address }}/consent
 
+webfinger:
+  oidc_discovery:
+    supported_claims:
+      - name
+      - email
+      - groups
+    supported_scope:
+      - email
+      - profile
+      - groups
+
 secrets:
   system:
     - {{ hydra_system_secret }}
