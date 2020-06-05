@@ -27,12 +27,14 @@ def get_name(crsid: str, data: Union[Member, dict]) -> dict:
             "family_name": data.surname,
             "given_name": data.preferred_name,
             "preferred_username": crsid,
+            "username": crsid,
         }
     else:
         return {
             "name": data["visibleName"],
             "family_name": data["surname"],
             "preferred_username": crsid,
+            "username": crsid,
         }
 
 def get_groups(crsid: str, data: Union[Member, dict]) -> dict:
