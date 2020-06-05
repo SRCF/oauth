@@ -7,7 +7,8 @@ import ucam_webauth.rsa
 import ucam_webauth.flask_glue
 import pwd
 from werkzeug.middleware.proxy_fix import ProxyFix
-from typing import Optional, List
+from typing import List, Union
+from srcf.database import queries, Member
 
 
 HOSTNAME = os.environ["FLASK_HOSTNAME"]
@@ -19,30 +20,44 @@ LOOKUP_PATH = "https://www.lookup.cam.ac.uk/api/v1/person/crsid/%s?fetch=email,d
 
 # lookup is the data returned by lookup if the crsid does not belong to an
 # SRCF user, None otherwise.
-def get_name(crsid: str, lookup: Optional[dict]):
-    if lookup is None:
-        return pwd.getpwnam(crsid).pw_gecos.rsplit(",",maxsplit=4)[0]
+def get_name(crsid: str, data: Union[Member, dict]) -> dict:
+    if isinstance(data, Member):
+        return {
+            "name": data.name,
+            "family_name": data.surname,
+            "given_name": data.preferred_name,
+            "preferred_username": crsid,
+        }
     else:
-        return lookup["visibleName"]
+        return {
+            "name": data["visibleName"],
+            "family_name": data["surname"],
+            "preferred_username": crsid,
+        }
 
-def get_email(crsid: str, lookup: Optional[dict]):
-    if lookup is None:
-        return crsid + "@srcf.net"
+def get_email(crsid: str, data: Union[Member, dict]) -> dict:
+    if isinstance(data, Member):
+        return {
+            "email": crsid + "@srcf.net",
+            "email_verified": crsid + "@srcf.net"
+        }
     else:
-        for entry in lookup["attributes"]:
+        for entry in data["attributes"]:
             if entry["scheme"] == "email" or entry["scheme"] == "departingEmail":
-                return entry["value"]
+                return { "email": entry["value"] }
 
-        return crsid + "@cam.ac.uk"
+        return { "email": crsid + "@cam.ac.uk" }
 
 SCOPES_DATA = {
     "profile": {
         "description": "Name",
-        "value_getter": get_name
+        "get_claims": get_name,
+        "value_str": lambda x: x["name"],
     },
     "email": {
         "description": "Email",
-        "value_getter": get_email
+        "get_claims": get_email,
+        "value_str": lambda x: x["email"],
     }
 }
 
@@ -119,26 +134,26 @@ def login_check(challenge: str):
     # What if auth fail
     return complete_login(auth.principal, challenge)
 
-def read_filter_scopes(crsid: str, requested_scopes: List[str], openid: bool=True) -> (List[str], dict):
-    scopes = []
+def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (List[str], dict):
     id_token = {}
-    lookup = None
 
-    if openid and "openid" in requested_scopes:
-        scopes.append("openid")
+    # We can only grant scopes that are in SCOPES_DATA, apart from openid. We
+    # remember if openid is present and add it back at the end.
+    add_openid = openid and "openid" in scopes # type: bool
+    scopes = [x for x in scopes if x in SCOPES_DATA]
 
-    if next((x for x in requested_scopes if x in SCOPES_DATA), None) is not None:
+    if len(scopes) > 0:
         try:
-            pwd.getpwnam(crsid)
+            data = queries.get_member(crsid)
         except KeyError:
-            lookup = requests.get(LOOKUP_PATH % crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
+            data = requests.get(LOOKUP_PATH % crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
 
-    for scope in requested_scopes:
-        if scope not in SCOPES_DATA:
-            continue
+    for scope in scopes:
+        for key, val in SCOPES_DATA[scope]["get_claims"](crsid, data).items():
+            id_token[key] = val
 
-        scopes.append(scope)
-        id_token[scope] = SCOPES_DATA[scope]["value_getter"](crsid, lookup)
+    if add_openid:
+        scopes.append("openid")
 
     return (scopes, id_token)
 
