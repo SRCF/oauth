@@ -10,8 +10,8 @@
   {% if scopes|length %}
     {% for scope in scopes %}
       <div class="scope-row">
-          <label for="{{ scope["name"] }}">{{ scope["description"] }} ({{ scope["value"] }})</label>
-          <input type="checkbox" name="scope" value="{{ scope["name"] }}" id="{{ scope["name"] }}" checked>
+          <label for="{{ scope }}">{{ SCOPES_DATA[scope]["description"] }} ({{ id_token[scope] }})</label>
+          <input type="checkbox" name="scope" value="{{ scope }}" id="{{ scope }}" checked>
       </div>
     {% endfor %}
   {% else %}

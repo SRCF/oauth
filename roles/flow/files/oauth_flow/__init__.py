@@ -7,7 +7,7 @@ import ucam_webauth.rsa
 import ucam_webauth.flask_glue
 import pwd
 from werkzeug.middleware.proxy_fix import ProxyFix
-from typing import Optional
+from typing import Optional, List
 
 
 HOSTNAME = os.environ["FLASK_HOSTNAME"]
@@ -35,7 +35,7 @@ def get_email(crsid: str, lookup: Optional[dict]):
 
         return crsid + "@cam.ac.uk"
 
-SCOPES = {
+SCOPES_DATA = {
     "profile": {
         "description": "Name",
         "value_getter": get_name
@@ -119,63 +119,76 @@ def login_check(challenge: str):
     # What if auth fail
     return complete_login(auth.principal, challenge)
 
+def read_filter_scopes(crsid: str, requested_scopes: List[str], openid: bool=True) -> (List[str], dict):
+    scopes = []
+    id_token = {}
+    lookup = None
+
+    if openid and "openid" in requested_scopes:
+        scopes.append("openid")
+
+    if next((x for x in requested_scopes if x in SCOPES_DATA), None) is not None:
+        try:
+            pwd.getpwnam(crsid)
+        except KeyError:
+            lookup = requests.get(LOOKUP_PATH % crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
+
+    for scope in requested_scopes:
+        if scope not in SCOPES_DATA:
+            continue
+
+        scopes.append(scope)
+        id_token[scope] = SCOPES_DATA[scope]["value_getter"](crsid, lookup)
+
+    return (scopes, id_token)
+
 @app.route('/consent', methods=["GET", "POST"])
 def consent():
     challenge = request.args["consent_challenge"]
     response = get("consent", challenge)
-    crsid = response["subject"]
 
-    # lookup is the data returned by lookup if the crsid does not belong to an
-    # SRCF user, None otherwise.
-    #
-    # The easiest way to check if a user exists is to getpwnam and see if we
-    # get a KeyError
-    try:
-        pwd.getpwnam(crsid)
-        lookup = None
-    except KeyError:
-        lookup = requests.get(LOOKUP_PATH % crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
+    crsid = response["subject"]
+    requested_scopes = response["requested_scope"]
+    audience = response["requested_access_token_audience"]
+
+    if response["skip"]:
+        scopes, id_token = read_filter_scopes(crsid, requested_scopes)
+
+        body = {
+            "grant_scope": scopes,
+            "grant_access_token_audience": audience,
+            "remember": True,
+            "remember_for": 3600,
+            "session": {
+                "id_token": id_token
+            }
+        }
+
+        return redirect(put("consent", "accept", challenge, body))
 
     if request.method == "GET":
-        scopes = []
-        for scope in response["requested_scope"]:
-            if scope not in SCOPES:
-                continue
+        scopes, id_token = read_filter_scopes(crsid, requested_scopes, openid=False)
 
-            data = SCOPES[scope]
+        data = {
+            "scopes": scopes,
+            "id_token": id_token,
+            "SCOPES_DATA": SCOPES_DATA
+        }
+        return render_template('authorize.html', client=response["client"], **data)
 
-            scopes.append({
-                "name": scope,
-                "description": data["description"],
-                "value": data["value_getter"](crsid, lookup)
-            })
+    action = request.form.get('action')
 
-        return render_template('authorize.html', client=response["client"], scopes=scopes)
+    if action == "cancel":
+        body = {
+            "error": "consent_rejected",
+            "error_description": "User did not consent",
+        }
+        return redirect(put("consent", "reject", challenge, body))
+
     else:
-        action = request.form.get('action')
-
-        if action == "cancel":
-            body = {
-                "error": "consent_rejected",
-                "error_description": "User refused to consent",
-            }
-            return redirect(put("consent", "reject", challenge, body))
-
-        audience = response["requested_access_token_audience"]
-
-        requested_scope = response["requested_scope"]
-        scopes = []
-
-        if "openid" in requested_scope:
-            scopes.append("openid")
-
-        id_token = {}
-        for scope in request.form.getlist("scope"):
-            if scope not in SCOPES or scope not in requested_scope:
-                continue
-
-            scopes.append(scope)
-            id_token[scope] = SCOPES[scope]["value_getter"](crsid, lookup)
+        granted_scopes = request.form.getlist("scope") + ["openid"]
+        granted_scopes = [x for x in granted_scopes if x in requested_scopes]
+        scopes, id_token = read_filter_scopes(crsid, granted_scopes)
 
         body = {
             "grant_scope": scopes,
