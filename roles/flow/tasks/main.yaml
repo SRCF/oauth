@@ -76,12 +76,15 @@
     group: root
     state: link
 
+- name: Enable oidentd
+  systemd:
+    enabled: true
+    state: started
+    name: oidentd
+
 - name: Enable uwsgi
   systemd:
     enabled: true
     name: uwsgi
-
-- name: Enable oidentd
-  systemd:
-    enabled: true
-    name: oidentd
+    state: restarted
+    daemon_reload: yes

@@ -66,3 +66,5 @@
   systemd:
     enabled: true
     name: hydra
+    state: restarted
+    daemon_reload: yes

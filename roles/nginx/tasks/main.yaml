@@ -13,11 +13,6 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
 
-- name: Enable nginx
-  systemd:
-    enabled: true
-    name: nginx
-
 - name: Copy auth nginx config
   template:
     src: auth.conf
@@ -33,3 +28,10 @@
     owner: root
     group: root
     state: link
+
+- name: Enable nginx
+  systemd:
+    enabled: true
+    name: nginx
+    state: restarted
+    daemon_reload: yes
