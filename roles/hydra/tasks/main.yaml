@@ -68,3 +68,11 @@
     name: hydra
     state: restarted
     daemon_reload: yes
+
+- name: Copy client creation script
+  copy:
+    src: oauth-new-client
+    dest: /usr/local/sbin/
+    owner: root
+    group: root
+    mode: '0755'

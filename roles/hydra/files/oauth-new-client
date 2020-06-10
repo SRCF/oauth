@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+import subprocess
+from typing import List
+
+def input_nonempty(s: str):
+    res = ""
+    while res == "":
+        res = input(s)
+
+    return res
+
+def input_in(s: str, allowed: List[str]):
+    res = None
+    while res not in allowed:
+        res = input(s)
+
+    return res
+
+
+args = ["hydra", "clients", "create", "--endpoint", "https://oauth.srcf.net:444/"]
+
+args.extend(["--name", input_nonempty("Client name: ")])
+
+ALLOWED_AUTH_METHODS = ["client_secret_post", "client_secret_basic", "private_key_jwt", "none"]
+auth_method = input_in("Auth method ({}): ".format(", ".join(ALLOWED_AUTH_METHODS)), ALLOWED_AUTH_METHODS)
+args.extend(["--token-endpoint-auth-method", auth_method])
+
+if auth_method == "private_key_jwt":
+    args.extend(["--jwks-uri", input_nonempty("JWK uri: ")])
+
+logo_uri = input("Logo URI: ")
+if logo_uri:
+    args.extend(["--logo-uri", logo_uri])
+
+args.extend(["--scope", input("Scopes: ")])
+
+args.extend(["--callbacks", input_nonempty("Callback URIs (comma separated): ")])
+
+print()
+print(" ".join(args))
+print()
+
+subprocess.run(args)
