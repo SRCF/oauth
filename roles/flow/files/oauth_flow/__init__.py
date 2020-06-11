@@ -13,8 +13,9 @@ from srcf.database import queries, Member
 
 HOSTNAME = os.environ["FLASK_HOSTNAME"]
 
-REQUESTS_PATH = "https://%s:444/oauth2/auth/requests/" % HOSTNAME
+REQUESTS_PATH = "http://localhost:4445/oauth2/auth/requests/"
 JSON_HEADER = { "Content-Type": "application/json" }
+FAKE_TLS_HEADER = { "X-Forwarded-Proto": "https" }
 GOOSE_MESSAGE = "SRCF OpenID Connect lets you identify yourself to other applications securely without sharing your credentials. After you login, you will learn more about the application seeking your information and decide how much information to share with them (if any)."
 LOOKUP_PATH = "https://www.lookup.cam.ac.uk/api/v1/person/crsid/%s?fetch=email,departingEmail"
 
@@ -104,7 +105,7 @@ def put(flow: str, action: str, challenge: str, body: dict) -> str:
     challenge_obj = {
         flow + "_challenge": challenge,
     }
-    response = requests.put(path, params=challenge_obj, headers=JSON_HEADER, data=json.dumps(body)).json()
+    response = requests.put(path, params=challenge_obj, headers={**JSON_HEADER, **FAKE_TLS_HEADER}, data=json.dumps(body)).json()
 
     if "error" in response:
         raise ValueError("Error when processing {} - {}".format(path, response))
@@ -116,7 +117,7 @@ def get(flow, challenge) -> dict:
     challenge_obj = {
         flow + "_challenge": challenge,
     }
-    response = requests.get(path, params=challenge_obj).json()
+    response = requests.get(path, headers=FAKE_TLS_HEADER, params=challenge_obj).json()
 
     if "error" in response:
         raise ValueError("Error when processing {} - {}".format(path, response))
