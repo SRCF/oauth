@@ -71,7 +71,7 @@
 
 - name: Copy client creation script
   copy:
-    src: oauth-new-client
+    src: sbin/
     dest: /usr/local/sbin/
     owner: root
     group: root
