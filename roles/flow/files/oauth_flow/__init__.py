@@ -6,6 +6,8 @@ from typing import List, Union
 from srcf.database import queries
 from .scopes import SCOPES_DATA
 from .utils import setup_app, auth
+from werkzeug.wrappers.response import Response
+from werkzeug.exceptions import HTTPException
 
 REQUESTS_PATH = "http://localhost:4445/oauth2/auth/requests/"
 JSON_HEADER = { "Content-Type": "application/json" }
@@ -15,35 +17,75 @@ LOOKUP_PATH = "https://www.lookup.cam.ac.uk/api/v1/person/crsid/%s?fetch=email,d
 app = Flask(__name__, template_folder="templates")
 setup_app(app)
 
+class InternalError(Exception):
+    def __init__(self, error: dict):
+        self.error = error
+
+    def display(self) -> Response:
+        return redirect(url_for("error", **self.error))
+
+    @staticmethod
+    def json_error(data: str) -> 'InternalError':
+        return InternalError({
+            "status_code": 500,
+            "error": "Internal Server Error",
+            "error_description": "Invalid JSON received from Hydra Admin API: '{}'".format(data),
+        })
+
+    @staticmethod
+    def connection_error() -> 'InternalError':
+        return InternalError({
+            "status_code": 500,
+            "error": "Internal Server Error",
+            "error_description": "Failed to connect to Hydra Admin API",
+        })
+
+    @staticmethod
+    def api_error(endpoint: str, error: str) -> 'InternalError':
+        return InternalError({
+            "status_code": 500,
+            "error": "Internal Server Error",
+            "error_description": "Error when accessing api endpoint /{}: {}".format(endpoint, error),
+        })
+
+def make_request(fun, endpoint: str, **kwargs) -> dict:
+    path = REQUESTS_PATH + endpoint
+    try:
+        response = fun(path, **kwargs)
+    except ConnectionError:
+        raise InternalError.connection_error()
+
+    if response.status_code != requests.codes.ok:
+        raise InternalError.api_error(endpoint, response.text)
+
+    try:
+        response_json = response.json()
+    except ValueError:
+        raise InternalError.json_error(response.text)
+
+    return response_json
+
 def put(flow: str, action: str, challenge: str, body: dict) -> str:
-    path = "%s%s/%s" % (REQUESTS_PATH, flow, action)
     challenge_obj = {
         flow + "_challenge": challenge,
     }
-    response = requests.put(path, params=challenge_obj, headers={**JSON_HEADER, **FAKE_TLS_HEADER}, data=json.dumps(body)).json()
-
-    if "error" in response:
-        raise ValueError("Error when processing {} - {}".format(path, response))
+    response = make_request(requests.put, flow + "/" + action, params=challenge_obj, headers={**JSON_HEADER, **FAKE_TLS_HEADER}, data=json.dumps(body))
 
     return response["redirect_to"]
 
 def get(flow, challenge) -> dict:
-    path = REQUESTS_PATH + flow
     challenge_obj = {
         flow + "_challenge": challenge,
     }
-    response = requests.get(path, headers=FAKE_TLS_HEADER, params=challenge_obj).json()
-
-    if "error" in response:
-        raise ValueError("Error when processing {} - {}".format(path, response))
-
-    return response
+    return make_request(requests.get, flow, headers=FAKE_TLS_HEADER, params=challenge_obj)
 
 @app.route('/login')
 def login():
     challenge = request.args["login_challenge"]
-
-    response = get("login", challenge)
+    try:
+        response = get("login", challenge)
+    except InternalError as e:
+        return e.display()
 
     if response["skip"]:
         return complete_login(response["subject"], challenge)
@@ -57,12 +99,14 @@ def complete_login(crsid: str, challenge: str):
         "remember_for": 3600,
     }
 
-    return redirect(put("login", "accept", challenge, body))
+    try:
+        return redirect(put("login", "accept", challenge, body))
+    except InternalError as e:
+        return e.display()
 
 @app.route('/login_check/<challenge>')
 @auth
 def login_check(challenge: str):
-    # What if auth fail
     return complete_login(auth.principal, challenge)
 
 def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (List[str], dict):
@@ -91,7 +135,10 @@ def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (Lis
 @app.route('/consent', methods=["GET", "POST"])
 def consent():
     challenge = request.args["consent_challenge"]
-    response = get("consent", challenge)
+    try:
+        response = get("consent", challenge)
+    except InternalError as e:
+        return e.display()
 
     crsid = response["subject"]
     requested_scopes = response["requested_scope"]
@@ -110,7 +157,10 @@ def consent():
             }
         }
 
-        return redirect(put("consent", "accept", challenge, body))
+        try:
+            return redirect(put("consent", "accept", challenge, body))
+        except InternalError as e:
+            return e.display()
 
     if request.method == "GET":
         scopes, id_token = read_filter_scopes(crsid, requested_scopes, openid=False)
@@ -129,7 +179,10 @@ def consent():
             "error": "consent_rejected",
             "error_description": "User did not consent",
         }
-        return redirect(put("consent", "reject", challenge, body))
+        try:
+            return redirect(put("consent", "reject", challenge, body))
+        except InternalError as e:
+            return e.display()
 
     else:
         granted_scopes = request.form.getlist("scope") + ["openid"]
@@ -146,4 +199,19 @@ def consent():
             }
         }
 
-        return redirect(put("consent", "accept", challenge, body))
+        try:
+            return redirect(put("consent", "accept", challenge, body))
+        except InternalError as e:
+            return e.display()
+
+@app.route('/error')
+def error():
+    return render_template('error.html', **request.args)
+
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    return InternalError({
+            "status_code": e.code,
+            "error": e.name,
+            "error_description": e.description,
+        }).display()
