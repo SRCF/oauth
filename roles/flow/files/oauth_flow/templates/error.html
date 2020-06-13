@@ -1,3 +1,8 @@
+{% if status_code is defined %}
+  {% set title = "Error " ~ status_code %}
+{% else %}
+  {% set title = "Error " + error %}
+{% endif %}
 {% extends "base.html" %}
 {% block body %}
 <div class="card-body">
