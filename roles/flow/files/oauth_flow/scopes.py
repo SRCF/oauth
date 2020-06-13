@@ -39,7 +39,7 @@ def get_email(crsid: str, data: Union[Member, dict]) -> dict:
             if entry["scheme"] == "email" or entry["scheme"] == "departingEmail":
                 return { "email": entry["value"] }
 
-        return { "email": crsid + "@cam.ac.uk" }
+        return {}
 
 SCOPES_DATA = {
     "profile": {
