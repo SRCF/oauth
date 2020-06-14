@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, request, url_for
 import json
 import requests
 import pwd
-from typing import List, Union
+from typing import List, Union, Optional
 from srcf.database import queries
 from .scopes import SCOPES_DATA
 from .utils import setup_app, auth
@@ -109,12 +109,11 @@ def complete_login(crsid: str, challenge: str):
 def login_check(challenge: str):
     return complete_login(auth.principal, challenge)
 
-def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (List[str], dict):
-    id_token = {}
+def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (List[str], Optional[dict]):
+    if "openid" not in scopes:
+        return ([], None)
 
-    # We can only grant scopes that are in SCOPES_DATA, apart from openid. We
-    # remember if openid is present and add it back at the end.
-    add_openid = openid and "openid" in scopes # type: bool
+    id_token = {}
     scopes = [x for x in scopes if x in SCOPES_DATA]
 
     if len(scopes) > 0:
@@ -123,11 +122,11 @@ def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (Lis
         except KeyError:
             data = requests.get(LOOKUP_PATH % crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
 
-    for scope in scopes:
-        for key, val in SCOPES_DATA[scope]["get_claims"](crsid, data).items():
-            id_token[key] = val
+        for scope in scopes:
+            for key, val in SCOPES_DATA[scope]["get_claims"](crsid, data).items():
+                id_token[key] = val
 
-    if add_openid:
+    if openid:
         scopes.append("openid")
 
     return (scopes, id_token)
@@ -152,10 +151,11 @@ def consent():
             "grant_access_token_audience": audience,
             "remember": True,
             "remember_for": 3600,
-            "session": {
+        }
+        if id_token is not None:
+            body["session"] = {
                 "id_token": id_token
             }
-        }
 
         try:
             return redirect(put("consent", "accept", challenge, body))
@@ -194,10 +194,11 @@ def consent():
             "grant_access_token_audience": audience,
             "remember": True,
             "remember_for": 3600,
-            "session": {
+        }
+        if id_token is not None:
+            body["session"] = {
                 "id_token": id_token
             }
-        }
 
         try:
             return redirect(put("consent", "accept", challenge, body))
