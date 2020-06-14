@@ -5,7 +5,8 @@
   {% if client["logo_uri"]|length %}
     <img class="client-logo" src="{{ client["logo_uri"] }}"></img>
   {% endif %}
-  <p>Grant access permissions to <strong>{{ client["client_name"] }}</strong>.</p>
+  <p>You are currently logged in as <strong>{{ crsid }}</strong>.<br/>
+  Grant access permissions to <strong>{{ client["client_name"] }}</strong>.</p>
 </div>
 <div class="card-body">
   {% if scopes|length %}
