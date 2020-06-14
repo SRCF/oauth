@@ -129,7 +129,7 @@ def consent():
             "id_token": id_token,
             "SCOPES_DATA": SCOPES_DATA
         }
-        return render_template('authorize.html', client=response["client"], **data)
+        return render_template('consent.html', client=response["client"], **data)
 
     action = request.form.get('action')
 
