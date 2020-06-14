@@ -7,7 +7,7 @@ from srcf.database import queries
 from .scopes import SCOPES_DATA
 from .utils import setup_app, auth
 from werkzeug.wrappers.response import Response
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, Unauthorized
 
 REQUESTS_PATH = "http://localhost:4445/oauth2/auth/requests/"
 JSON_HEADER = { "Content-Type": "application/json" }
@@ -55,12 +55,23 @@ def login():
     challenge = request.args["login_challenge"]
     response = get("login", challenge)
 
-    if response["skip"]:
-        return complete_login(response["subject"], challenge)
-    else:
-        return redirect(url_for("login_check", challenge=challenge))
+    if not response["skip"]:
+        try:
+            a = auth.before_request()
+        except Unauthorized:
+            body = {
+                "error": "login_required",
+                "error_description": "User cancelled login",
+            }
+            return redirect(put("login", "reject", challenge, body))
 
-def complete_login(crsid: str, challenge: str):
+        if a is not None:
+            return a
+
+        crsid = auth.principal
+    else:
+        crsid = response["subject"]
+
     body = {
         "subject": crsid,
         "remember": True,
@@ -68,11 +79,6 @@ def complete_login(crsid: str, challenge: str):
     }
 
     return redirect(put("login", "accept", challenge, body))
-
-@app.route('/login_check/<challenge>')
-@auth
-def login_check(challenge: str):
-    return complete_login(auth.principal, challenge)
 
 def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (List[str], Optional[dict]):
     if "openid" not in scopes:
@@ -135,7 +141,7 @@ def consent():
 
     if action == "cancel":
         body = {
-            "error": "consent_rejected",
+            "error": "consent_required",
             "error_description": "User did not consent",
         }
         return redirect(put("consent", "reject", challenge, body))
