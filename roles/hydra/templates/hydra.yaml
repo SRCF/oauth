@@ -20,7 +20,12 @@ webfinger:
   oidc_discovery:
     supported_claims:
       - name
+      - family_name
+      - given_name
+      - preferred_username
+      - username
       - email
+      - email_verified
       - groups
     supported_scope:
       - email
