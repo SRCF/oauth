@@ -74,8 +74,7 @@ def login():
 
     body = {
         "subject": crsid,
-        "remember": True,
-        "remember_for": 3600,
+        "remember": False,
     }
 
     return redirect(put("login", "accept", challenge, body))
@@ -142,7 +141,7 @@ def consent():
         "grant_scope": scopes,
         "grant_access_token_audience": audience,
         "remember": True,
-        "remember_for": 3600,
+        "remember_for": 60 * 60 * 24 * 30,
     }
     if id_token is not None:
         body["session"] = {
