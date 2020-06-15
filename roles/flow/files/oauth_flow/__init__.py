@@ -113,56 +113,43 @@ def consent():
 
     if response["skip"]:
         scopes, id_token = read_filter_scopes(crsid, requested_scopes)
-
-        body = {
-            "grant_scope": scopes,
-            "grant_access_token_audience": audience,
-            "remember": True,
-            "remember_for": 3600,
-        }
-        if id_token is not None:
-            body["session"] = {
-                "id_token": id_token
-            }
-
-        return redirect(put("consent", "accept", challenge, body))
-
-    if request.method == "GET":
-        scopes, id_token = read_filter_scopes(crsid, requested_scopes, openid=False)
-
-        data = {
-            "scopes": scopes,
-            "id_token": id_token,
-            "SCOPES_DATA": SCOPES_DATA
-        }
-        return render_template('consent.html', client=response["client"], crsid=crsid, **data)
-
-    action = request.form.get('action')
-
-    if action == "cancel":
-        body = {
-            "error": "consent_required",
-            "error_description": "User did not consent",
-        }
-        return redirect(put("consent", "reject", challenge, body))
-
     else:
-        granted_scopes = request.form.getlist("scope") + ["openid"]
-        granted_scopes = [x for x in granted_scopes if x in requested_scopes]
-        scopes, id_token = read_filter_scopes(crsid, granted_scopes)
+        if request.method == "GET":
+            scopes, id_token = read_filter_scopes(crsid, requested_scopes, openid=False)
 
-        body = {
-            "grant_scope": scopes,
-            "grant_access_token_audience": audience,
-            "remember": True,
-            "remember_for": 3600,
-        }
-        if id_token is not None:
-            body["session"] = {
-                "id_token": id_token
+            data = {
+                "scopes": scopes,
+                "id_token": id_token,
+                "SCOPES_DATA": SCOPES_DATA
             }
+            return render_template('consent.html', client=response["client"], crsid=crsid, **data)
+        else:
+            action = request.form.get('action')
 
-        return redirect(put("consent", "accept", challenge, body))
+            if action == "cancel":
+                body = {
+                    "error": "consent_required",
+                    "error_description": "User did not consent",
+                }
+                return redirect(put("consent", "reject", challenge, body))
+
+            else:
+                granted_scopes = request.form.getlist("scope") + ["openid"]
+                granted_scopes = [x for x in granted_scopes if x in requested_scopes]
+                scopes, id_token = read_filter_scopes(crsid, granted_scopes)
+
+    body = {
+        "grant_scope": scopes,
+        "grant_access_token_audience": audience,
+        "remember": True,
+        "remember_for": 3600,
+    }
+    if id_token is not None:
+        body["session"] = {
+            "id_token": id_token
+        }
+
+    return redirect(put("consent", "accept", challenge, body))
 
 @app.route('/error')
 def error():
