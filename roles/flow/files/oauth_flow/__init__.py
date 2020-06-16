@@ -60,7 +60,7 @@ def login():
             a = auth.before_request()
         except Unauthorized:
             body = {
-                "error": "login_required",
+                "error": "access_denied",
                 "error_description": "User cancelled login",
             }
             return redirect(put("login", "reject", challenge, body))
@@ -124,7 +124,7 @@ def consent():
 
             if action == "cancel":
                 body = {
-                    "error": "consent_required",
+                    "error": "access_denied",
                     "error_description": "User did not consent",
                 }
                 return redirect(put("consent", "reject", challenge, body))
@@ -133,6 +133,8 @@ def consent():
                 granted_scopes = request.form.getlist("scope") + ["openid"]
                 granted_scopes = [x for x in granted_scopes if x in requested_scopes]
                 scopes, id_token = gen_id_token(crsid, granted_scopes)
+            else:
+                scopes, id_token = [], {}
 
     scopes = scopes + [x for x in requested_scopes if x in AUTOMATIC_SCOPES]
 
