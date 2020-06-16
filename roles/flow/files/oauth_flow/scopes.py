@@ -58,3 +58,5 @@ SCOPES_DATA = {
         "value_str": lambda x: ""
     },
 }
+
+AUTOMATIC_SCOPES = {"openid", "offline", "offline_access" }

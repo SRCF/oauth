@@ -4,7 +4,7 @@ import requests
 import pwd
 from typing import List, Union, Optional
 from srcf.database import queries
-from .scopes import SCOPES_DATA
+from .scopes import SCOPES_DATA, AUTOMATIC_SCOPES
 from .utils import setup_app, auth
 from werkzeug.wrappers.response import Response
 from werkzeug.exceptions import HTTPException, Unauthorized
@@ -79,9 +79,9 @@ def login():
 
     return redirect(put("login", "accept", challenge, body))
 
-def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (List[str], Optional[dict]):
+def gen_id_token(crsid: str, scopes: List[str]) -> (List[str], dict):
     if "openid" not in scopes:
-        return ([], None)
+        return ([], {})
 
     id_token = {}
     scopes = [x for x in scopes if x in SCOPES_DATA]
@@ -96,9 +96,6 @@ def read_filter_scopes(crsid: str, scopes: List[str], openid: bool=True) -> (Lis
             for key, val in SCOPES_DATA[scope]["get_claims"](crsid, data).items():
                 id_token[key] = val
 
-    if openid:
-        scopes.append("openid")
-
     return (scopes, id_token)
 
 @app.route('/consent', methods=["GET", "POST"])
@@ -111,10 +108,10 @@ def consent():
     audience = response["requested_access_token_audience"]
 
     if response["skip"]:
-        scopes, id_token = read_filter_scopes(crsid, requested_scopes)
+        scopes, id_token = gen_id_token(crsid, requested_scopes)
     else:
         if request.method == "GET":
-            scopes, id_token = read_filter_scopes(crsid, requested_scopes, openid=False)
+            scopes, id_token = gen_id_token(crsid, requested_scopes)
 
             data = {
                 "scopes": scopes,
@@ -132,10 +129,12 @@ def consent():
                 }
                 return redirect(put("consent", "reject", challenge, body))
 
-            else:
+            elif "openid" in requested_scopes:
                 granted_scopes = request.form.getlist("scope") + ["openid"]
                 granted_scopes = [x for x in granted_scopes if x in requested_scopes]
-                scopes, id_token = read_filter_scopes(crsid, granted_scopes)
+                scopes, id_token = gen_id_token(crsid, granted_scopes)
+
+    scopes = scopes + [x for x in requested_scopes if x in AUTOMATIC_SCOPES]
 
     body = {
         "grant_scope": scopes,
@@ -143,7 +142,7 @@ def consent():
         "remember": True,
         "remember_for": 60 * 60 * 24 * 30,
     }
-    if id_token is not None:
+    if "openid" in scopes:
         body["session"] = {
             "id_token": id_token
         }
