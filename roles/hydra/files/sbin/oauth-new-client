@@ -17,7 +17,7 @@ def input_in(s: str, allowed: List[str]):
     return res
 
 
-args = ["hydra-clients"]
+args = ["hydra-clients", "create"]
 
 args.extend(["--name", input_nonempty("Client name: ")])
 
