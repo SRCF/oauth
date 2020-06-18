@@ -1,0 +1,10 @@
+---
+- name: Install certbot
+  apt:
+    package:
+      - nginx
+      - certbot
+      - python3-certbot-nginx
+
+- name: Run certbot
+  command: certbot -n --nginx -d {{ server_address }} -m {{ letsencrypt_email }} certonly

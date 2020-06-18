@@ -1,5 +1,6 @@
 ---
 server_address: "{{ inventory_hostname }}"
+letsencrypt_email: "soc-srcf-admin@lists.cam.ac.uk"
 hydra_system_secret: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           31396362313330313666333734383030623561643139343632623238393365306361333834643032

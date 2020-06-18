@@ -3,10 +3,6 @@
   apt:
     package:
       - nginx-full
-      - certbot
-      - python3-certbot-nginx
-
-# TODO: Run certbot
 
 - name: Disable default nginx
   file:
