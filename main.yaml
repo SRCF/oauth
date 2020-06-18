@@ -1,15 +1,4 @@
 ---
-- name: Install nginx
-  hosts: oauth
-  become: yes
-  become_user: root
-  tags:
-    - nginx
-  vars_files:
-    - vars.yaml
-  roles:
-    - nginx
-
 - name: Install certbot
   hosts: oauth
   become: yes
@@ -20,6 +9,17 @@
     - vars.yaml
   roles:
     - certbot
+
+- name: Install nginx
+  hosts: oauth
+  become: yes
+  become_user: root
+  tags:
+    - nginx
+  vars_files:
+    - vars.yaml
+  roles:
+    - nginx
 
 - name: Install ufw
   hosts: oauth

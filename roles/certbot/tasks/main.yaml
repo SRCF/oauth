@@ -2,7 +2,7 @@
 - name: Install certbot
   apt:
     package:
-      - nginx
+      - nginx-full
       - certbot
       - python3-certbot-nginx
 
