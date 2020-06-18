@@ -5,6 +5,10 @@ serve:
   tls:
     allow_termination_from:
       - 127.0.0.1/32
+  admin:
+    host: localhost
+  public:
+    host: localhost
 
 dsn: postgres:///hydra
 
