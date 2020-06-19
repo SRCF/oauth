@@ -1,2 +1,0 @@
-#!/bin/sh
-hydra clients --endpoint unix://{{ hydra_admin_api}} --fake-tls-termination $@

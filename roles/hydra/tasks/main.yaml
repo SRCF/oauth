@@ -80,14 +80,6 @@
     state: restarted
     daemon_reload: yes
 
-- name: Copy hydra-clients creation script
-  template:
-    src: hydra-clients
-    dest: /usr/local/sbin/
-    owner: root
-    group: root
-    mode: '0755'
-
 - name: Copy client creation script
   copy:
     src: oauth-new-client
