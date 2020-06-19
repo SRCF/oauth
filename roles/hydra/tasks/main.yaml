@@ -1,27 +1,5 @@
 ---
 # TODO: setup NIS
-- name: Create hydra-admin group
-  group:
-    name: hydra-admin
-    state: present
-
-- name: Create hydra-public group
-  group:
-    name: hydra-public
-    state: present
-
-- name: Create hydra group, which is union of hydra-admin and hydra-public
-  group:
-    name: hydra
-    state: present
-
-- name: Create hydra user
-  user:
-    name: hydra
-    system: yes
-    groups: hydra-admin, hydra-public, hydra
-    append: true
-
 - name: Install tmpfile to create /run/hydra/
   copy:
     src: hydra-run.conf
