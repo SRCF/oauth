@@ -1,43 +1,54 @@
 #!/usr/bin/env python3
 import subprocess
-from typing import List
+from typing import List, Callable
+from srcf.database import queries
+import json
+from oauth_flow import session
 
-def input_nonempty(s: str):
-    res = ""
-    while res == "":
-        res = input(s)
-
-    return res
-
-def input_in(s: str, allowed: List[str]):
-    res = None
-    while res not in allowed:
-        res = input(s)
+HEADER = {"Content-Type": "application/json", "Accept": "application/json"}
+def input_validate(s: str, f: Callable[[str], bool]) -> str:
+    res = input(s + ": ")
+    while not f(res):
+        res = input(s + ": ")
 
     return res
 
+def input_any(s: str) -> str:
+    return input(s + ": ")
 
-args = ["hydra-clients", "create"]
+def input_nonempty(s: str) -> str:
+    return input_validate(s, lambda x: x != "")
 
-args.extend(["--name", input_nonempty("Client name: ")])
+def input_in(s: str, allowed: List[str]) -> str:
+    return input_validate(s, lambda x: x in allowed)
 
+def is_member_or_soc(s: str) -> bool:
+    try:
+        queries.get_member_or_society(s)
+        return True
+    except KeyError:
+        return False
+
+client : dict = {}
+
+client["client_name"] = input_nonempty("Client name")
 ALLOWED_AUTH_METHODS = ["client_secret_post", "client_secret_basic", "private_key_jwt", "none"]
-auth_method = input_in("Auth method ({}): ".format(", ".join(ALLOWED_AUTH_METHODS)), ALLOWED_AUTH_METHODS)
-args.extend(["--token-endpoint-auth-method", auth_method])
+client["token_endpoint_auth_method"] = input_in("Auth method ({})".format(", ".join(ALLOWED_AUTH_METHODS)), ALLOWED_AUTH_METHODS)
 
-if auth_method == "private_key_jwt":
-    args.extend(["--jwks-uri", input_nonempty("JWK uri: ")])
+if client["token_endpoint_auth_method"] == "private_key_jwt":
+    client["jwks_uri"] = input_nonempty("JWK uri")
 
 logo_uri = input("Logo URI: ")
 if logo_uri:
-    args.extend(["--logo-uri", logo_uri])
+    client["logo_uri"] = logo_uri
 
-args.extend(["--scope", input("Scopes: ")])
+client["scope"] = input("Scopes (space separated): ")
+client["redirect_uris"] = input_nonempty("Callback URIs (space separated)").split(" ")
 
-args.extend(["--callbacks", input_nonempty("Callback URIs (comma separated): ")])
+client["metadata"] = {}
+client["metadata"]["owner"] = input_validate("Client owner (srcf user or soc)", is_member_or_soc)
+client["metadata"]["internal"] = False
 
-print()
-print(" ".join(args))
-print()
+response = session.post("http://hydra/clients", headers=HEADER, data=json.dumps(client)).json()
 
-subprocess.run(args)
+print(f'Client id: {response["client_id"]}\nClient secret: {response["client_secret"]}')
