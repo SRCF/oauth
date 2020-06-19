@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-import subprocess
 from typing import List, Callable
 from srcf.database import queries
-import json
-from oauth_flow import session
+from hydra_session import session
 
-HEADER = {"Content-Type": "application/json", "Accept": "application/json"}
 def input_validate(s: str, f: Callable[[str], bool]) -> str:
     res = input(s + ": ")
     while not f(res):
@@ -49,6 +46,6 @@ client["metadata"] = {}
 client["metadata"]["owner"] = input_validate("Client owner (srcf user or soc)", is_member_or_soc)
 client["metadata"]["internal"] = False
 
-response = session.post("http://hydra/clients", headers=HEADER, data=json.dumps(client)).json()
+response = session.post("http://hydra/clients", json=client).json()
 
 print(f'Client id: {response["client_id"]}\nClient secret: {response["client_secret"]}')
