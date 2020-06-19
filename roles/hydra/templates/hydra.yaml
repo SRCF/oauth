@@ -11,14 +11,14 @@ serve:
     socket:
       owner: hydra
       group: hydra-public
-      permission: 0o770
+      mode: 0o770
 
   admin:
     host: unix:{{ hydra_admin_api }}
     socket:
       owner: hydra
       group: hydra-admin
-      permission: 0o770
+      mode: 0o770
 
 dsn: postgres:///hydra
 
