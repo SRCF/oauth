@@ -1,9 +1,42 @@
 ---
 # TODO: setup NIS
+- name: Create hydra-admin group
+  group:
+    name: hydra-admin
+    state: present
+
+- name: Create hydra-public group
+  group:
+    name: hydra-public
+    state: present
+
+- name: Create hydra group, which is union of hydra-admin and hydra-public
+  group:
+    name: hydra
+    state: present
+
 - name: Create hydra user
   user:
     name: hydra
     system: yes
+    groups: hydra-admin, hydra-public, hydra
+    append: true
+
+- name: Install tmpfile to create /run/hydra/
+  copy:
+    src: hydra-run.conf
+    dest: /etc/tmpfiles.d
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create /run/hydra/
+  file:
+    path: /run/hydra
+    state: directory
+    owner: hydra
+    group: hydra
+    mode: '0770'
 
 - name: Copy hydra config
   template:
@@ -69,9 +102,17 @@
     state: restarted
     daemon_reload: yes
 
+- name: Copy hydra-clients creation script
+  template:
+    src: hydra-clients
+    dest: /usr/local/sbin/
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Copy client creation script
   copy:
-    src: sbin/
+    src: oauth-new-client
     dest: /usr/local/sbin/
     owner: root
     group: root

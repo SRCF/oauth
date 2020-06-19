@@ -1,0 +1,39 @@
+---
+- name: Create hydra-admin group
+  group:
+    name: hydra-admin
+    state: present
+
+- name: Create hydra-public group
+  group:
+    name: hydra-public
+    state: present
+
+- name: Create hydra group, which is union of hydra-admin and hydra-public
+  group:
+    name: hydra
+    state: present
+
+- name: Create hydra user
+  user:
+    name: hydra
+    system: true
+    create_home: true
+    groups: hydra-admin, hydra-public, hydra
+    append: true
+
+- name: Create flow user
+  user:
+    name: flow
+    system: true
+    create_home: false
+    groups: hydra-admin, hydra
+    append: true
+
+- name: Add www-data to hydra-public and hydra
+  user:
+    name: www-data
+    system: true
+    create_home: false
+    groups: hydra-public, hydra
+    append: true

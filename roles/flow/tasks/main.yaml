@@ -1,10 +1,4 @@
 ---
-- name: Create flow user
-  user:
-    name: flow
-    system: true
-    create_home: false
-
 - name: Install packages
   apt:
     package:

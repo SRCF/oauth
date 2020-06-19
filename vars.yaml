@@ -1,5 +1,8 @@
 ---
 server_address: "{{ inventory_hostname }}"
+oauth_flow_socket: "/run/uwsgi/app/oauth_flow/socket"
+hydra_admin_api: "/run/hydra/admin-api.sock"
+hydra_public_api: "/run/hydra/public-api.sock"
 letsencrypt_email: "soc-srcf-admin@lists.cam.ac.uk"
 hydra_system_secret: !vault |
           $ANSIBLE_VAULT;1.1;AES256

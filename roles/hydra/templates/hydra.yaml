@@ -5,10 +5,20 @@ serve:
   tls:
     allow_termination_from:
       - 127.0.0.1/32
-  admin:
-    host: localhost
+
   public:
-    host: localhost
+    host: unix:{{ hydra_public_api }}
+    socket:
+      owner: hydra
+      group: hydra-public
+      permission: 0o770
+
+  admin:
+    host: unix:{{ hydra_admin_api }}
+    socket:
+      owner: hydra
+      group: hydra-admin
+      permission: 0o770
 
 dsn: postgres:///hydra
 

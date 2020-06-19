@@ -1,2 +1,0 @@
-#!/bin/sh
-hydra clients --endpoint http://localhost:4445/ --fake-tls-termination $@

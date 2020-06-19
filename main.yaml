@@ -1,10 +1,21 @@
 ---
+- name: Set up users
+  hosts: oauth
+  become: yes
+  become_user: root
+  tags:
+    - users
+  vars_files:
+    - vars.yaml
+  roles:
+    - users
+
 - name: Install certbot
   hosts: oauth
   become: yes
   become_user: root
   tags:
-    - nginx
+    - certbot
   vars_files:
     - vars.yaml
   roles:
