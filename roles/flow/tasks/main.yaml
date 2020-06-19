@@ -39,6 +39,14 @@
     mode: '0644'
     directory_mode: '0755'
 
+- name: Install hydra_session library
+  template:
+    src: hydra_session.py
+    dest: /usr/local/lib/python3.8/dist-packages/
+    owner: root
+    group: root
+    mode: '0644'
+
 - name: Install oauth_flow
   copy:
     src: oauth_flow/

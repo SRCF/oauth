@@ -6,13 +6,12 @@ from typing import List, Union, Optional
 from srcf.database import queries
 from .scopes import SCOPES_DATA, AUTOMATIC_SCOPES
 from .utils import setup_app, auth
-from .session import session
+from hydra_session import session
 from werkzeug.wrappers.response import Response
 from werkzeug.exceptions import HTTPException, Unauthorized
 
 REQUESTS_PATH = "http://hydra/oauth2/auth/requests/"
 JSON_HEADER = { "Content-Type": "application/json" }
-FAKE_TLS_HEADER = { "X-Forwarded-Proto": "https" }
 LOOKUP_PATH = "https://www.lookup.cam.ac.uk/api/v1/person/crsid/%s?fetch=email,departingEmail"
 
 app = Flask(__name__, template_folder="templates")
@@ -41,7 +40,7 @@ def put(flow: str, action: str, challenge: str, body: dict) -> str:
     challenge_obj = {
         flow + "_challenge": challenge,
     }
-    response = make_request(session.put, flow + "/" + action, params=challenge_obj, headers={**JSON_HEADER, **FAKE_TLS_HEADER}, data=json.dumps(body))
+    response = make_request(session.put, flow + "/" + action, params=challenge_obj, headers=JSON_HEADER, data=json.dumps(body))
 
     return response["redirect_to"]
 
@@ -49,7 +48,7 @@ def get(flow, challenge) -> dict:
     challenge_obj = {
         flow + "_challenge": challenge,
     }
-    return make_request(session.get, flow, headers=FAKE_TLS_HEADER, params=challenge_obj)
+    return make_request(session.get, flow, params=challenge_obj)
 
 @app.route('/login')
 def login():
