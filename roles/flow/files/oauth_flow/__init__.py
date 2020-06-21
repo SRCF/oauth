@@ -106,7 +106,7 @@ def consent():
     requested_scopes = response["requested_scope"]
     audience = response["requested_access_token_audience"]
 
-    if response["skip"]:
+    if response["skip"] or response["client"]["metadata"]["internal"]:
         scopes, id_token = gen_id_token(crsid, requested_scopes)
     else:
         if request.method == "GET":
