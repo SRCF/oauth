@@ -42,9 +42,8 @@ if logo_uri:
 client["scope"] = input("Scopes (space separated): ")
 client["redirect_uris"] = input_nonempty("Callback URIs (space separated)").split(" ")
 
-client["metadata"] = {}
-client["metadata"]["owner"] = input_validate("Client owner (srcf user or soc)", is_member_or_soc)
-client["metadata"]["internal"] = False
+client["owner"] = input_validate("Client owner (srcf user or soc)", is_member_or_soc)
+client["metadata"] = { "internal": False }
 
 response = session.post("http://hydra/clients", json=client).json()
 
