@@ -10,7 +10,7 @@ from hydra_session import session
 from werkzeug.wrappers.response import Response
 from werkzeug.exceptions import HTTPException, Unauthorized
 
-REQUESTS_PATH = "http://hydra/oauth2/auth/requests/"
+REQUESTS_PATH = "/oauth2/auth/requests/"
 LOOKUP_PATH = "https://www.lookup.cam.ac.uk/api/v1/person/crsid/%s?fetch=email,departingEmail"
 
 app = Flask(__name__, template_folder="templates")

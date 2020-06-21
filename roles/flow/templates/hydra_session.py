@@ -7,6 +7,7 @@ This uses ansible templates to fill in the socket path
 import requests
 import socket
 
+from urllib.parse import urljoin
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 from requests.adapters import HTTPAdapter
@@ -30,5 +31,13 @@ class Adapter(HTTPAdapter):
     def get_connection(self, url, proxies=None):
         return ConnectionPool()
 
-session = requests.Session()
-session.mount("http://hydra/", Adapter())
+class HydraSession(requests.Session):
+    def __init__(self):
+        super(HydraSession, self).__init__()
+        self.mount("http://hydra/", Adapter())
+
+    def request(self, method, url, **kwargs):
+        url = urljoin("http://hydra/", url)
+        return super(HydraSession, self).request(method, url, **kwargs)
+
+session = HydraSession()

@@ -45,6 +45,6 @@ client["redirect_uris"] = input_nonempty("Callback URIs (space separated)").spli
 client["owner"] = input_validate("Client owner (srcf user or soc)", is_member_or_soc)
 client["metadata"] = { "internal": False }
 
-response = session.post("http://hydra/clients", json=client).json()
+response = session.post("/clients", json=client).json()
 
 print(f'Client id: {response["client_id"]}\nClient secret: {response["client_secret"]}')
