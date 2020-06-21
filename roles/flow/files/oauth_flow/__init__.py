@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, request, url_for
 import json
 import requests
 import pwd
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Tuple, Any
 from srcf.database import queries
 from .scopes import SCOPES_DATA, AUTOMATIC_SCOPES
 from .utils import setup_app, auth
@@ -78,7 +78,7 @@ def login():
 
     return redirect(put("login", "accept", challenge, body))
 
-def gen_id_token(crsid: str, scopes: List[str]) -> (List[str], dict):
+def gen_id_token(crsid: str, scopes: List[str]) -> Tuple[List[str], dict]:
     if "openid" not in scopes:
         return ([], {})
 
@@ -92,7 +92,8 @@ def gen_id_token(crsid: str, scopes: List[str]) -> (List[str], dict):
             data = requests.get(LOOKUP_PATH % crsid, headers = { "Accept": "application/json" }).json()["result"]["person"]
 
         for scope in scopes:
-            for key, val in SCOPES_DATA[scope]["get_claims"](crsid, data).items():
+            get_claim = SCOPES_DATA[scope]["get_claims"] # type: Any
+            for key, val in get_claim(crsid, data).items():
                 id_token[key] = val
 
     return (scopes, id_token)
