@@ -25,6 +25,22 @@
     group: root
     state: link
 
+- name: Copy control_api nginx config
+  template:
+    src: control_api.conf
+    dest: /etc/nginx/sites-available/control_api.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable control_api nginx config
+  file:
+    src: /etc/nginx/sites-available/control_api.conf
+    dest: /etc/nginx/sites-enabled/control_api.conf
+    owner: root
+    group: root
+    state: link
+
 - name: Enable nginx
   systemd:
     enabled: true

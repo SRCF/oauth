@@ -65,3 +65,14 @@
     - vars.yaml
   roles:
     - flow
+
+- name: Install control_api
+  hosts: oauth
+  become: yes
+  become_user: root
+  tags:
+    - control_api
+  vars_files:
+    - vars.yaml
+  roles:
+    - control_api

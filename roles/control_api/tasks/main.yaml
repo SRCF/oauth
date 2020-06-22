@@ -1,0 +1,31 @@
+---
+- name: Install control_api
+  copy:
+    src: control_api.py
+    dest: /usr/local/lib/python3.8/dist-packages/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install control_api uwsgi config
+  template:
+    src: control_api.ini
+    dest: /etc/uwsgi/apps-available/control_api.ini
+    owner: root
+    group: root
+    mode: '0640'
+
+- name: Enable control_api uwsgi config
+  file:
+    src: /etc/uwsgi/apps-available/control_api.ini
+    dest: /etc/uwsgi/apps-enabled/control_api.ini
+    owner: root
+    group: root
+    state: link
+
+- name: Enable uwsgi
+  systemd:
+    enabled: true
+    name: uwsgi
+    state: restarted
+    daemon_reload: yes

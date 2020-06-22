@@ -30,6 +30,14 @@
     groups: hydra-admin, hydra
     append: true
 
+- name: Create control-api user
+  user:
+    name: control-api
+    system: true
+    create_home: false
+    groups: hydra-admin, hydra
+    append: true
+
 - name: Add www-data to hydra-public and hydra
   user:
     name: www-data
