@@ -23,10 +23,11 @@ def get_name(crsid: str, data: Union[Member, dict]) -> dict:
 def get_groups(crsid: str, data: Union[Member, dict]) -> dict:
     if isinstance(data, Member):
         return {
-            "groups": [x.name for x in data.societies]
+            "groups": [x.society for x in data.societies],
+            "groups_details": {x.society:x.description for x in data.societies}
         }
     else:
-        return { "groups": [] }
+        return { "groups": [], "groups_details": {} }
 
 def get_email(crsid: str, data: Union[Member, dict]) -> dict:
     if isinstance(data, Member):
