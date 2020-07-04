@@ -1,0 +1,5 @@
+---
+- name: restart uwsgi
+  systemd:
+    unit: uwsgi
+    state: restarted

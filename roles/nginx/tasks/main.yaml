@@ -8,7 +8,7 @@
   file:
     path: /etc/nginx/sites-enabled/default
     state: absent
-  register: default
+  notify: reload nginx
 
 - name: Copy auth nginx config
   template:
@@ -17,7 +17,7 @@
     owner: root
     group: root
     mode: '0644'
-  register: auth
+  notify: reload nginx
 
 - name: Enable auth nginx config
   file:
@@ -34,7 +34,7 @@
     owner: root
     group: root
     mode: '0644'
-  register: control_api
+  notify: reload nginx
 
 - name: Enable control_api nginx config
   file:
@@ -43,17 +43,6 @@
     owner: root
     group: root
     state: link
-
-- name: Validate nginx config
-  command: nginx -t
-  changed_when: false
-
-- name: Restart nginx
-  systemd:
-    name: nginx
-    state: restarted
-    daemon_reload: yes
-  when: default.changed or auth.changed or control_api.changed
 
 - name: Enable nginx
   systemd:

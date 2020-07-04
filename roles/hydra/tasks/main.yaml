@@ -23,7 +23,7 @@
     owner: hydra
     group: nogroup
     mode: '0600'
-  register: config
+  notify: restart hydra
 
 - name: Copy hydra binary
   copy:
@@ -33,6 +33,7 @@
     group: root
     mode: '0755'
   register: binary
+  notify: restart hydra
 
 - name: Install postgres
   apt:
@@ -75,14 +76,6 @@
     owner: root
     group: root
     mode: '0644'
-  register: service
-
-- name: Restart hydra
-  systemd:
-    name: hydra
-    state: restarted
-    daemon_reload: yes
-  when: binary.changed or service.changed or config.changed
 
 - name: Start hydra
   systemd:

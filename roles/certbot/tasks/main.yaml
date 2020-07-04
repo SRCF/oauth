@@ -8,5 +8,4 @@
 
 - name: Run certbot
   command: certbot -n --nginx -d {{ server_address }} -m {{ letsencrypt_email }} certonly
-  register: certbot
   changed_when: '"no action taken" not in certbot.stdout'

@@ -20,7 +20,7 @@
     repo: svn://pip.internal.srcf.net:28116/trunk
     dest: /opt/srcf/
     update: true
-  register: srcflib
+  notify: restart uwsgi
 
 - name: Install SRCF library
   file:
@@ -46,7 +46,7 @@
     owner: root
     group: root
     mode: '0644'
-  register: hydrasession
+  notify: restart uwsgi
 
 - name: Install oauth_flow
   copy:
@@ -56,7 +56,7 @@
     group: root
     mode: '0644'
     directory_mode: '0755'
-  register: flow
+  notify: restart uwsgi
 
 - name: Install uwsgi config
   template:
@@ -65,7 +65,7 @@
     owner: root
     group: root
     mode: '0640'
-  register: config
+  notify: restart uwsgi
 
 - name: Enable uwsgi config
   file:
@@ -80,13 +80,6 @@
     enabled: true
     state: started
     name: oidentd
-
-- name: Restart uwsgi
-  systemd:
-    name: uwsgi
-    state: restarted
-    daemon_reload: yes
-  when: srcflib.changed or hydrasession.changed or flow.changed or config.changed
 
 - name: Enable uwsgi
   systemd:

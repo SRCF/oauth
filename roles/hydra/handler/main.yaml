@@ -1,0 +1,4 @@
+- name: restart hydra
+  systemd:
+    name: hydra
+    state: restarted
