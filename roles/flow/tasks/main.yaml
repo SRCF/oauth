@@ -5,7 +5,6 @@
       - libssl-dev
       - python3-flask
       - python3-requests
-      - python3-werkzeug
       - python3-pip
       - python3-sqlalchemy
       - uwsgi
@@ -21,6 +20,7 @@
     repo: svn://pip.internal.srcf.net:28116/trunk
     dest: /opt/srcf/
     update: true
+  register: srcflib
 
 - name: Install SRCF library
   file:
@@ -46,6 +46,7 @@
     owner: root
     group: root
     mode: '0644'
+  register: hydrasession
 
 - name: Install oauth_flow
   copy:
@@ -55,6 +56,7 @@
     group: root
     mode: '0644'
     directory_mode: '0755'
+  register: flow
 
 - name: Install uwsgi config
   template:
@@ -63,6 +65,7 @@
     owner: root
     group: root
     mode: '0640'
+  register: config
 
 - name: Enable uwsgi config
   file:
@@ -78,9 +81,15 @@
     state: started
     name: oidentd
 
+- name: Restart uwsgi
+  systemd:
+    name: uwsgi
+    state: restarted
+    daemon_reload: yes
+  when: srcflib.changed or hydrasession.changed or flow.changed or config.changed
+
 - name: Enable uwsgi
   systemd:
     enabled: true
     name: uwsgi
-    state: restarted
-    daemon_reload: yes
+    state: started
