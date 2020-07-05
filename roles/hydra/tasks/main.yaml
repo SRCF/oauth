@@ -76,6 +76,14 @@
     owner: root
     group: root
     mode: '0644'
+  notify: restart hydra
+  register: systemd
+
+- name: Reload daemon
+  systemd:
+    name: hydra
+    daemon_reload: true
+  when: systemd.changed
 
 - name: Start hydra
   systemd:
