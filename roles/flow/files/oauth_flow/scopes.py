@@ -1,6 +1,28 @@
 from typing import Union
 from srcf.database import Member
 
+# Convert a crsid to a numerical string
+def get_id(crsid: str):
+    id_ = 0
+    power = 1
+    is_num = False
+    for c in list(crsid):
+        if not is_num:
+            n = ord(c) - ord('a')
+            if 0 <= n < 26:
+                id_ += n * power
+            else:
+                is_num = True
+                id_ += 26 * power
+                power *= 27
+
+        if is_num:
+            id_ += (ord(c) - ord('0')) * power
+
+        power *= 27
+
+    return id_
+
 # data is a Member object if crsid belongs to an SRCF member, and the lookup
 # data otherwise.
 def get_name(crsid: str, data: Union[Member, dict]) -> dict:
@@ -11,6 +33,8 @@ def get_name(crsid: str, data: Union[Member, dict]) -> dict:
             "given_name": data.preferred_name,
             "preferred_username": crsid,
             "username": crsid,
+            "login": crsid,
+            "id": get_id(crsid),
         }
     else:
         return {
@@ -18,6 +42,8 @@ def get_name(crsid: str, data: Union[Member, dict]) -> dict:
             "family_name": data["surname"],
             "preferred_username": crsid,
             "username": crsid,
+            "login": crsid,
+            "id": get_id(crsid),
         }
 
 def get_groups(crsid: str, data: Union[Member, dict]) -> dict:
