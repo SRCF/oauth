@@ -25,7 +25,7 @@ def get_id(crsid: str):
 
 # data is a Member object if crsid belongs to an SRCF member, and the lookup
 # data otherwise.
-def get_name(crsid: str, data: Union[Member, dict]) -> dict:
+def get_profile(crsid: str, data: Union[Member, dict]) -> dict:
     if isinstance(data, Member):
         return {
             "name": data.name,
@@ -71,7 +71,7 @@ def get_email(crsid: str, data: Union[Member, dict]) -> dict:
 SCOPES_DATA = {
     "profile": {
         "description": "Name",
-        "get_claims": get_name,
+        "get_claims": get_profile,
         "value_str": lambda x: x["name"],
     },
     "email": {
