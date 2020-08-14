@@ -26,12 +26,15 @@
   notify: restart hydra
 
 - name: Copy hydra binary
-  copy:
-    src: hydra
-    dest: /usr/local/bin/hydra
+  unarchive:
+    src: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}_linux_64-bit.tar.gz"
+    dest: /usr/local/bin/
     owner: root
     group: root
     mode: '0755'
+    remote_src: true
+    extra_opts:
+      - hydra # This specifies the file to extract
   register: binary
   notify: restart hydra
 

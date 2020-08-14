@@ -20,6 +20,9 @@ serve:
       group: hydra-admin
       mode: 0o770
 
+  cookies:
+    same_site_mode: Lax
+
 dsn: postgres:///hydra
 
 urls:
