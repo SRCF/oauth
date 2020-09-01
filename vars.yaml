@@ -5,7 +5,7 @@ control_api_socket: "/run/uwsgi/app/control_api/socket"
 hydra_admin_api: "/run/hydra/admin-api.sock"
 hydra_public_api: "/run/hydra/public-api.sock"
 letsencrypt_email: "soc-srcf-admin@lists.cam.ac.uk"
-hydra_version: 1.7.0
+hydra_version: 1.7.4
 hydra_system_secret: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           31396362313330313666333734383030623561643139343632623238393365306361333834643032
