@@ -48,7 +48,7 @@
 
 - name: Copy hydra binary
   unarchive:
-    src: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}_linux_64-bit.tar.gz"
+    src: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}-linux_64bit.tar.gz"
     dest: /usr/local/bin/
     owner: root
     group: root

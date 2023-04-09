@@ -37,7 +37,9 @@ class HydraSession(requests.Session):
         self.mount("http://hydra/", Adapter())
 
     def request(self, method, url, **kwargs):
-        url = urljoin("http://hydra/", url)
+        # Strip leading '/' on provided `url` values to stop urljoin() from
+        # removing the required '/admin/' subpath
+        url = urljoin("http://hydra/admin/", url.lstrip('/'))
         return super(HydraSession, self).request(method, url, **kwargs)
 
 session = HydraSession()
