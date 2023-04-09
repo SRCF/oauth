@@ -25,6 +25,27 @@
     mode: '0600'
   notify: restart hydra
 
+- name: Check if hydra is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/hydra
+  register: existing_binary
+
+- name: Take database backup of existing installation
+  when: existing_binary.stat.exists
+  block:
+  - name: create blank dump destination
+    ansible.builtin.file:
+      dest: "/var/backups/hydra-db-{{ ansible_date_time.iso8601_basic_short }}"
+      state: touch
+      owner: postgres
+      group: hydra-admin
+      mode: '0640'
+  - name: run pg_dump
+    ansible.builtin.command:
+      cmd: "pg_dump --file /var/backups/hydra-db-{{ ansible_date_time.iso8601_basic_short }} --format=custom hydra"
+    become_user: postgres
+    register: db_backup
+
 - name: Copy hydra binary
   unarchive:
     src: "https://github.com/ory/hydra/releases/download/v{{ hydra_version }}/hydra_{{ hydra_version }}_linux_64-bit.tar.gz"
