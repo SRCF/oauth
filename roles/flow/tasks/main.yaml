@@ -15,21 +15,6 @@
   pip:
     name: python-ucam-webauth
 
-- name: Clone SRCF library
-  subversion:
-    repo: svn://pip.internal.srcf.net:28116/trunk
-    dest: /opt/srcf/
-    update: true
-  notify: restart uwsgi
-
-- name: Install SRCF library
-  file:
-    src: /opt/srcf/lib/python3/dist-packages/srcf
-    dest: /usr/local/lib/python3.8/dist-packages/srcf
-    owner: root
-    group: root
-    state: link
-
 - name: Copy ucam_webauth keys
   copy:
     src: keys/
