@@ -107,7 +107,15 @@ def consent():
     requested_scopes = response["requested_scope"]
     audience = response["requested_access_token_audience"]
 
-    if response["skip"] or response["client"]["metadata"].get("internal", False):
+    if (
+        # Hydra says that user has already consented to the scopes:
+        response["skip"] or
+        # Hydra feature, client is trusted and user consent is assumed:
+        response["client"]["skip_consent"] or
+        # SRCF specific, client is 'internal'
+        # (an older way of expressing skip_consent before Hydra supported it):
+        response["client"]["metadata"].get("internal", False)
+    ):
         scopes, id_token = gen_id_token(crsid, requested_scopes)
     else:
         if request.method == "GET":
