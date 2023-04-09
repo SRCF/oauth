@@ -21,7 +21,8 @@ class WLSAuthDecorator(ucam_webauth.flask_glue.AuthDecorator):
     response_class = WLSResponse
     logout_url = "https://auth.srcf.net/logout"
 
-auth = WLSAuthDecorator(desc="SRCF OpenID Connect", require_ptags=None, iact=True)
+def upstream_wls(display_name: str):
+    return WLSAuthDecorator(desc=display_name, require_ptags=None, iact=True)
 
 def setup_app(app):
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1)

@@ -5,7 +5,7 @@ import pwd
 from typing import List, Union, Optional, Tuple, Any
 from srcf.database import queries
 from .scopes import SCOPES_DATA, AUTOMATIC_SCOPES
-from .utils import setup_app, auth
+from .utils import setup_app, upstream_wls
 from hydra_session import session
 from werkzeug.wrappers.response import Response
 from werkzeug.exceptions import HTTPException, Unauthorized
@@ -53,6 +53,8 @@ def get(flow, challenge) -> dict:
 def login():
     challenge = request.args["login_challenge"]
     response = get("login", challenge)
+
+    auth = upstream_wls(response["client"]["client_name"])
 
     if not response["skip"]:
         try:
