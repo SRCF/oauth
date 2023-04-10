@@ -136,13 +136,55 @@ def introspect_token():
 
     This endpoint exists to provide authenticated/authorised access to the
     corresponding Hydra admin API endpoint for trusted internal clients.
+
+    Callers using an OAuth2 access token to authenticate themselves to this
+    endpoint will only be shown introspection results for OAuth2 tokens
+    originally issued under their client_id or with their client_id in the
+    token's "aud" claim.
     """
     token = request.form.get("token")
     if not token:
-        return ({"error": "no token provided"}, 400)
+        return ({"error": "token_missing"}, 400)
 
     token_info, _ = hydra_client.introspect_token(token)
-    return token_info or ({"error": "no such token"}, 404)
+
+    # An {"active": false} introspection result is safe to pass back to any
+    # caller, which we may do here.  For any other result, the subsequent code
+    # may make the result visible depending on the caller's identity.
+    inactive_token_result = {"active": False}
+    if token_info == inactive_token_result:
+        return token_info
+
+    if token_info is not None:
+        subject = g.auth.get("sub")  # OAuth2 subject (if authed via OAuth2)
+
+        # - Callers using the global API secret can introspect any token.
+        # - Callers using an OAuth2 access token can only introspect tokens
+        #   issued either under their client_id or with their client_id in the
+        #   audience.
+        token_visible_to_client = (
+            # Global API secret was used:
+            g.auth["method"] == "global_secret" or
+            (
+                # OAuth2 access token was used:
+                g.auth["method"] == "oauth2" and
+                # sanity check that the before_request authoriser did set a subject:
+                subject is not None and
+                # caller is the OAuth2 client itself:
+                subject == g.auth.get("client_id") and
+                # introspected token is relevant to this OAuth2 client, as defined above:
+                (
+                    (subject == token_info.get("client_id")) or
+                    (subject in token_info.get("aud", []))
+                )
+            )
+        )
+        if token_visible_to_client:
+            return token_info
+
+    # If we got to here, the caller isn't entitled to see the token
+    # introspection result, so pretend it doesn't exist.
+    return inactive_token_result
 
 
 @app.route("/_debug/whoami")
