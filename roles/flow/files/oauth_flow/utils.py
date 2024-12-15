@@ -4,6 +4,7 @@ import ucam_webauth.flask_glue
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import os
+from glob import glob
 
 class WLSRequest(ucam_webauth.Request):
     def __str__(self):
@@ -12,9 +13,11 @@ class WLSRequest(ucam_webauth.Request):
 
 class WLSResponse(ucam_webauth.Response):
     keys = dict()
-    for kid in (2, 500, 501):
-        with open('/etc/ucam_webauth_keys/pubkey{}'.format(kid), 'rb') as f:
-            keys[str(kid)] = ucam_webauth.rsa.load_key(f.read())
+    prefix = '/etc/ucam_webauth_keys/pubkey'
+    for path in glob(f'{prefix}*'):
+        with open(path, 'rb') as f:
+            kid = path[len(prefix):]
+            keys[kid] = ucam_webauth.rsa.load_key(f.read())
 
 class WLSAuthDecorator(ucam_webauth.flask_glue.AuthDecorator):
     request_class = WLSRequest
