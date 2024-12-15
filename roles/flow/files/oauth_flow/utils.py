@@ -12,7 +12,7 @@ class WLSRequest(ucam_webauth.Request):
 
 class WLSResponse(ucam_webauth.Response):
     keys = dict()
-    for kid in (2, 500):
+    for kid in (2, 500, 501):
         with open('/etc/ucam_webauth_keys/pubkey{}'.format(kid), 'rb') as f:
             keys[str(kid)] = ucam_webauth.rsa.load_key(f.read())
 
